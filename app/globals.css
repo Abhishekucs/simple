@@ -1,0 +1,230 @@
+:root {
+  --paper: #ffffff;
+  --ink: #1f1f1f;
+  --muted: #b8b8b8;
+  --muted-strong: #868686;
+  --focus: #d9d9d9;
+  --selection: #eeeeee;
+  color-scheme: light;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+.journal-shell {
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  background: var(--paper);
+  --journal-font-size: 18px;
+  --journal-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+}
+
+.journal-shell.is-camera {
+  background: #050505;
+}
+
+.camera-preview {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+  height: 100svh;
+  object-fit: cover;
+  background: #050505;
+}
+
+.journal-editor {
+  display: block;
+  width: min(720px, calc(100vw - 48px));
+  height: 100vh;
+  height: 100svh;
+  margin: 0 auto;
+  padding: clamp(112px, 17vh, 176px) 0 112px;
+  border: 0;
+  outline: 0;
+  resize: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: transparent;
+  color: var(--ink);
+  caret-color: var(--ink);
+  font-family: var(--journal-font-family);
+  font-size: var(--journal-font-size);
+  font-weight: 400;
+  line-height: 1.72;
+  letter-spacing: 0;
+}
+
+.journal-editor::placeholder {
+  color: #d0d0d0;
+  opacity: 1;
+}
+
+.journal-editor:focus-visible {
+  outline: 0;
+}
+
+.journal-bottom {
+  position: fixed;
+  left: clamp(18px, 3vw, 34px);
+  right: clamp(18px, 3vw, 34px);
+  bottom: clamp(16px, 3vh, 28px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0;
+  user-select: none;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.journal-options {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 0;
+  pointer-events: auto;
+}
+
+.journal-options-left {
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.journal-options-right {
+  flex-shrink: 0;
+  justify-content: flex-end;
+}
+
+.journal-option {
+  appearance: none;
+  border: 0;
+  padding: 6px 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  line-height: 1;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.journal-option:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+
+.journal-option + .journal-option::before {
+  content: "·";
+  margin: 0 8px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.journal-option:hover,
+.journal-option[data-active="true"],
+.journal-option[data-running="true"],
+.journal-option[data-recording="true"],
+.journal-option[data-danger="true"],
+.new-page {
+  color: var(--muted-strong);
+}
+
+.journal-option[data-recording="true"],
+.journal-option[data-danger="true"] {
+  color: #8f4a4a;
+}
+
+.recording-time {
+  min-width: 42px;
+  cursor: default;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+}
+
+.is-camera .journal-bottom {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.is-camera .journal-option {
+  color: rgba(255, 255, 255, 0.72);
+  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.42);
+}
+
+.is-camera .journal-option + .journal-option::before {
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.is-camera .journal-option:hover,
+.is-camera .journal-option[data-recording="true"] {
+  color: #ffffff;
+}
+
+.is-camera .journal-option[data-danger="true"] {
+  color: #ff5f57;
+}
+
+.is-camera .journal-option[data-danger="true"]:hover {
+  color: #ff7b75;
+}
+
+.journal-option:hover {
+  color: var(--ink);
+}
+
+.journal-option:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 5px;
+}
+
+.session-timer {
+  min-width: 42px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .journal-editor {
+    width: calc(100vw - 36px);
+    padding-top: 92px;
+    padding-bottom: 96px;
+    font-size: 17px;
+  }
+
+  .journal-bottom {
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    align-items: flex-end;
+    font-size: 13px;
+  }
+
+  .journal-options-left {
+    max-width: calc(100vw - 214px);
+  }
+
+  .journal-option + .journal-option::before {
+    margin: 0 6px;
+  }
+}
