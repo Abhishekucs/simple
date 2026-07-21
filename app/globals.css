@@ -244,6 +244,7 @@ body {
   display: block;
   border-radius: 6px;
   padding: 8px 10px;
+  text-decoration: none;
 }
 
 .journal-page-title {
