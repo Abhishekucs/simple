@@ -33,27 +33,313 @@ body {
   width: 100vw;
   height: 100vh;
   height: 100svh;
+  display: grid;
+  grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   background: var(--paper);
+  --sidebar-width: 224px;
+  --code-surface: #f6f6f6;
+  --content-ink: #1f1f1f;
+  --rule: #eeeeee;
+  --danger: #aa3838;
   --journal-font-size: 18px;
   --journal-font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
 }
 
-.journal-shell.is-camera {
-  background: #050505;
+.journal-shell.is-dark,
+.auth-shell.is-dark {
+  --paper: #111111;
+  --ink: #f1f1f1;
+  --muted: #676767;
+  --muted-strong: #bcbcbc;
+  --focus: #464646;
+  --selection: #2d2d2d;
+  --code-surface: #1c1c1c;
+  --content-ink: #f1f1f1;
+  --rule: #282828;
+  --danger: #e07171;
+  color-scheme: dark;
 }
 
-.camera-preview {
-  display: block;
+.journal-shell.is-dark ::selection,
+.auth-shell.is-dark ::selection {
+  background: var(--selection);
+}
+
+.auth-shell {
+  --paper: #ffffff;
+  --ink: #1f1f1f;
+  --muted: #b8b8b8;
+  --muted-strong: #868686;
+  --focus: #d9d9d9;
+  --selection: #eeeeee;
+  --rule: #e9e9e9;
+  --danger: #aa3838;
+  display: grid;
   width: 100vw;
   height: 100vh;
   height: 100svh;
-  object-fit: cover;
-  background: #050505;
+  place-items: center;
+  background: var(--paper);
+  color: var(--ink);
+}
+
+.journal-loading {
+  margin: 0;
+  color: var(--muted);
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.auth-form {
+  display: flex;
+  width: min(320px, calc(100vw - 48px));
+  flex-direction: column;
+}
+
+.auth-form h1 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.auth-intro {
+  margin: 8px 0 36px;
+  color: var(--muted-strong);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.auth-field {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 22px;
+  color: var(--muted-strong);
+  font-size: 12px;
+  letter-spacing: 0;
+}
+
+.auth-field input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  border-radius: 0;
+  outline: 0;
+  padding: 4px 0 10px;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  letter-spacing: 0;
+}
+
+.auth-field input:focus {
+  border-color: var(--ink);
+}
+
+.auth-message {
+  min-height: 20px;
+  margin: -4px 0 16px;
+  color: var(--muted-strong);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.auth-message.is-error {
+  color: var(--danger);
+}
+
+.auth-submit,
+.auth-switch,
+.auth-theme {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.auth-submit {
+  min-height: 42px;
+  border-radius: 5px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 14px;
+}
+
+.auth-submit:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.auth-switch {
+  align-self: center;
+  margin-top: 18px;
+  padding: 5px;
+  color: var(--muted-strong);
+  font-size: 13px;
+}
+
+.auth-switch:hover,
+.auth-theme:hover {
+  color: var(--ink);
+}
+
+.auth-theme {
+  position: fixed;
+  right: clamp(18px, 3vw, 34px);
+  bottom: clamp(16px, 3vh, 28px);
+  padding: 6px 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.auth-submit:focus-visible,
+.auth-switch:focus-visible,
+.auth-theme:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.journal-sidebar {
+  grid-column: 1;
+  display: flex;
+  min-width: 0;
+  height: 100vh;
+  height: 100svh;
+  flex-direction: column;
+  border-right: 1px solid var(--rule);
+  background: var(--paper);
+  padding: 20px 12px 18px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.2;
+  letter-spacing: 0;
+  user-select: none;
+}
+
+.journal-sidebar-pages {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding: 2px 0 16px;
+}
+
+.journal-page-link,
+.sidebar-new-page {
+  appearance: none;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  letter-spacing: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.journal-page-link {
+  display: block;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.journal-page-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-page-link:hover,
+.journal-page-link[data-active="true"],
+.sidebar-new-page:hover {
+  color: var(--ink);
+}
+
+.journal-page-link[data-active="true"] {
+  background: var(--selection);
+}
+
+.sidebar-new-page {
+  flex-shrink: 0;
+  padding: 8px 10px;
+}
+
+.journal-sidebar-footer {
+  flex-shrink: 0;
+}
+
+.journal-save-state {
+  min-height: 24px;
+  padding: 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.journal-save-state button,
+.journal-account button {
+  appearance: none;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+
+.journal-save-state[data-state="error"] {
+  color: var(--danger);
+}
+
+.journal-account {
+  display: grid;
+  gap: 5px;
+  margin-bottom: 12px;
+  padding: 0 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.journal-account span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.journal-account button {
+  width: fit-content;
+}
+
+.journal-account button:hover,
+.journal-save-state button:hover {
+  color: var(--ink);
+}
+
+.journal-page-link:focus-visible,
+.sidebar-new-page:focus-visible {
+  outline: 1px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.journal-workspace {
+  grid-column: 2;
+  min-width: 0;
+  height: 100vh;
+  height: 100svh;
+}
+
+.journal-workspace[data-loading="true"] {
+  opacity: 0.55;
 }
 
 .journal-editor {
   display: block;
-  width: min(720px, calc(100vw - 48px));
+  width: min(720px, calc(100% - 48px));
   height: 100vh;
   height: 100svh;
   margin: 0 auto;
@@ -64,8 +350,8 @@ body {
   overflow-y: auto;
   overscroll-behavior: contain;
   background: transparent;
-  color: var(--ink);
-  caret-color: var(--ink);
+  color: var(--content-ink);
+  caret-color: var(--content-ink);
   font-family: var(--journal-font-family);
   font-size: var(--journal-font-size);
   font-weight: 400;
@@ -78,13 +364,203 @@ body {
   opacity: 1;
 }
 
+.journal-shell.is-dark .journal-editor::placeholder {
+  color: #565656;
+}
+
 .journal-editor:focus-visible {
   outline: 0;
 }
 
+.journal-editor:disabled {
+  opacity: 1;
+}
+
+.journal-markdown {
+  display: block;
+  width: min(720px, calc(100% - 48px));
+  height: 100vh;
+  height: 100svh;
+  margin: 0 auto;
+  padding: clamp(112px, 17vh, 176px) 0 112px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  color: var(--content-ink);
+  font-family: var(--journal-font-family);
+  font-size: var(--journal-font-size);
+  font-weight: 400;
+  line-height: 1.72;
+  letter-spacing: 0;
+}
+
+.journal-markdown.is-empty {
+  color: #d0d0d0;
+}
+
+.journal-shell.is-dark .journal-markdown.is-empty {
+  color: #565656;
+}
+
+.journal-markdown > :first-child {
+  margin-top: 0;
+}
+
+.journal-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.journal-markdown h1,
+.journal-markdown h2,
+.journal-markdown h3,
+.journal-markdown h4,
+.journal-markdown h5,
+.journal-markdown h6 {
+  margin: 1.4em 0 0.45em;
+  color: var(--content-ink);
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.24;
+  letter-spacing: 0;
+}
+
+.journal-markdown h1 {
+  font-size: 1.76em;
+}
+
+.journal-markdown h2 {
+  font-size: 1.42em;
+}
+
+.journal-markdown h3 {
+  font-size: 1.14em;
+}
+
+.journal-markdown p,
+.journal-markdown blockquote,
+.journal-markdown ul,
+.journal-markdown ol,
+.journal-markdown pre,
+.journal-markdown table {
+  margin: 0 0 1em;
+}
+
+.journal-markdown ul,
+.journal-markdown ol {
+  padding-left: 1.35em;
+}
+
+.journal-markdown li + li {
+  margin-top: 0.2em;
+}
+
+.journal-markdown li:has(input[type="checkbox"]) {
+  list-style: none;
+  margin-left: -1.35em;
+}
+
+.journal-markdown input[type="checkbox"] {
+  width: 0.9em;
+  height: 0.9em;
+  margin: 0 0.55em 0 0;
+  accent-color: var(--ink);
+}
+
+.journal-markdown blockquote {
+  padding-left: 1em;
+  border-left: 1px solid var(--rule);
+  color: var(--muted-strong);
+}
+
+.journal-shell.is-dark .journal-markdown blockquote {
+  color: var(--content-ink);
+}
+
+.journal-markdown code {
+  border-radius: 4px;
+  background: var(--code-surface);
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.9em;
+}
+
+.journal-markdown :not(pre) > code {
+  padding: 0.12em 0.32em;
+}
+
+.journal-markdown pre {
+  overflow-x: auto;
+  padding: 0.85em 1em;
+  background: var(--code-surface);
+  line-height: 1.55;
+}
+
+.journal-markdown pre code {
+  padding: 0;
+  background: transparent;
+  white-space: pre;
+}
+
+.journal-markdown a {
+  color: var(--content-ink);
+  text-decoration-color: var(--muted);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+}
+
+.journal-markdown hr {
+  height: 1px;
+  margin: 1.6em 0;
+  border: 0;
+  background: var(--rule);
+}
+
+.journal-markdown table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.94em;
+}
+
+.journal-markdown th,
+.journal-markdown td {
+  border-bottom: 1px solid var(--rule);
+  padding: 0.45em 0.75em 0.45em 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.journal-markdown th {
+  color: var(--muted-strong);
+  font-weight: 650;
+}
+
+.journal-shell.is-dark .journal-markdown th {
+  color: var(--content-ink);
+}
+
+.journal-markdown img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.2em 0;
+}
+
+.journal-data-error {
+  position: fixed;
+  top: 20px;
+  right: clamp(18px, 3vw, 34px);
+  z-index: 3;
+  max-width: min(440px, calc(100vw - var(--sidebar-width) - 48px));
+  margin: 0;
+  color: var(--danger);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: right;
+}
+
 .journal-bottom {
   position: fixed;
-  left: clamp(18px, 3vw, 34px);
+  left: calc(var(--sidebar-width) + clamp(18px, 3vw, 34px));
   right: clamp(18px, 3vw, 34px);
   bottom: clamp(16px, 3vh, 28px);
   display: flex;
@@ -144,49 +620,8 @@ body {
 
 .journal-option:hover,
 .journal-option[data-active="true"],
-.journal-option[data-running="true"],
-.journal-option[data-recording="true"],
-.journal-option[data-danger="true"],
-.new-page {
+.journal-option[data-running="true"] {
   color: var(--muted-strong);
-}
-
-.journal-option[data-recording="true"],
-.journal-option[data-danger="true"] {
-  color: #8f4a4a;
-}
-
-.recording-time {
-  min-width: 42px;
-  cursor: default;
-  font-variant-numeric: tabular-nums;
-  text-align: left;
-}
-
-.is-camera .journal-bottom {
-  color: rgba(255, 255, 255, 0.72);
-}
-
-.is-camera .journal-option {
-  color: rgba(255, 255, 255, 0.72);
-  text-shadow: 0 1px 14px rgba(0, 0, 0, 0.42);
-}
-
-.is-camera .journal-option + .journal-option::before {
-  color: rgba(255, 255, 255, 0.46);
-}
-
-.is-camera .journal-option:hover,
-.is-camera .journal-option[data-recording="true"] {
-  color: #ffffff;
-}
-
-.is-camera .journal-option[data-danger="true"] {
-  color: #ff5f57;
-}
-
-.is-camera .journal-option[data-danger="true"]:hover {
-  color: #ff7b75;
 }
 
 .journal-option:hover {
@@ -205,23 +640,50 @@ body {
 }
 
 @media (max-width: 640px) {
+  .journal-shell {
+    --sidebar-width: 148px;
+  }
+
+  .journal-sidebar {
+    padding: 14px 8px;
+    font-size: 13px;
+  }
+
+  .journal-page-link,
+  .sidebar-new-page {
+    padding: 8px;
+  }
+
+  .journal-save-state,
+  .journal-account {
+    padding-right: 8px;
+    padding-left: 8px;
+  }
+
   .journal-editor {
-    width: calc(100vw - 36px);
+    width: calc(100% - 32px);
+    padding-top: 92px;
+    padding-bottom: 96px;
+    font-size: 17px;
+  }
+
+  .journal-markdown {
+    width: calc(100% - 32px);
     padding-top: 92px;
     padding-bottom: 96px;
     font-size: 17px;
   }
 
   .journal-bottom {
-    left: 18px;
-    right: 18px;
+    left: calc(var(--sidebar-width) + 14px);
+    right: 14px;
     bottom: 18px;
     align-items: flex-end;
     font-size: 13px;
   }
 
   .journal-options-left {
-    max-width: calc(100vw - 214px);
+    display: none;
   }
 
   .journal-option + .journal-option::before {
