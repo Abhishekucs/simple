@@ -43,6 +43,10 @@ function isSafeLink(href) {
   return /^(https?:|mailto:|\/|#)/i.test(href);
 }
 
+function isJournalPageId(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function hasMarkdownSyntax(value) {
   return /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|~~~|\|.+\||[-*_]{3,}\s*$)|(\*\*|__|~~|`|\[[^\]]+\]\([^)]+\))/m.test(
     value
@@ -166,6 +170,11 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   }
 
   async function openPage(pageId) {
+    if (!isJournalPageId(pageId)) {
+      showPageNotFound(pageId);
+      return false;
+    }
+
     const requestId = pageRequestRef.current + 1;
     const requestRoutePageId = routePageIdRef.current;
     pageRequestRef.current = requestId;
