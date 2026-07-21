@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -42,6 +43,10 @@ function isSafeLink(href) {
   return /^(https?:|mailto:|\/|#)/i.test(href);
 }
 
+function isJournalPageId(value) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+}
+
 function hasMarkdownSyntax(value) {
   return /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|~~~|\|.+\||[-*_]{3,}\s*$)|(\*\*|__|~~|`|\[[^\]]+\]\([^)]+\))/m.test(
     value
@@ -78,9 +83,11 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   const timerEndsAtRef = useRef(null);
   const activeRef = useRef(true);
   const currentPageIdRef = useRef("");
+  const handledPageIdRef = useRef("");
   const pageListRef = useRef([]);
   const pageRequestRef = useRef(0);
   const requestedPageIdRef = useRef("");
+  const routePageIdRef = useRef(routePageId);
   const saveQueueRef = useRef(new Map());
   const saveDrainPromiseRef = useRef(null);
   const textRef = useRef("");
@@ -88,6 +95,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   const [dataError, setDataError] = useState("");
   const [fontFamilyKey, setFontFamilyKey] = useState("system");
   const [fontSize, setFontSize] = useState(18);
+  const [journalInitialized, setJournalInitialized] = useState(false);
   const [markdownPreview, setMarkdownPreview] = useState(false);
   const [pageList, setPageList] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
@@ -108,7 +116,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   }
 
   function setPagePath(pageId, mode) {
-    if (pageId === routePageId) {
+    if (pageId === routePageIdRef.current) {
       return;
     }
 
@@ -122,12 +130,13 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     router.replace(nextPath, { scroll: false });
   }
 
-  function applyPage(page, historyMode) {
+  function applyPage(page) {
     if (!activeRef.current) {
       return;
     }
 
     currentPageIdRef.current = page.id;
+    handledPageIdRef.current = page.id;
     requestedPageIdRef.current = "";
     textRef.current = page.content_md;
     setCurrentPageId(page.id);
@@ -136,11 +145,38 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     setPageLoading(false);
     updatePageMetadata(page);
     window.localStorage.setItem(getPageStorageKey(user.id), page.id);
-    setPagePath(page.id, historyMode);
   }
 
-  async function openPage(pageId, historyMode = "replace") {
+  function clearPageState() {
+    currentPageIdRef.current = "";
+    requestedPageIdRef.current = "";
+    textRef.current = "";
+    setCurrentPageId("");
+    setText("");
+    setMarkdownPreview(false);
+    setPageLoading(false);
+  }
+
+  function showPageNotFound(pageId) {
+    clearPageState();
+    handledPageIdRef.current = pageId;
+    setDataError("This page does not exist.");
+  }
+
+  function showPageLoadError(message) {
+    clearPageState();
+    handledPageIdRef.current = "";
+    setDataError(message);
+  }
+
+  async function openPage(pageId) {
+    if (!isJournalPageId(pageId)) {
+      showPageNotFound(pageId);
+      return false;
+    }
+
     const requestId = pageRequestRef.current + 1;
+    const requestRoutePageId = routePageIdRef.current;
     pageRequestRef.current = requestId;
     requestedPageIdRef.current = pageId;
     setDataError("");
@@ -149,21 +185,31 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     try {
       const page = await getJournalPage(supabase, user.id, pageId);
 
-      if (requestId !== pageRequestRef.current || !activeRef.current) {
-        return;
+      if (
+        requestId !== pageRequestRef.current ||
+        !activeRef.current ||
+        requestRoutePageId !== routePageIdRef.current
+      ) {
+        return false;
       }
 
       if (!page) {
-        throw new Error("This page does not exist.");
+        showPageNotFound(pageId);
+        return false;
       }
 
-      applyPage(page, historyMode);
+      applyPage(page);
+      return true;
     } catch (error) {
-      if (requestId === pageRequestRef.current && activeRef.current) {
-        requestedPageIdRef.current = "";
-        setPageLoading(false);
-        setDataError(error.message);
+      if (
+        requestId === pageRequestRef.current &&
+        activeRef.current &&
+        requestRoutePageId === routePageIdRef.current
+      ) {
+        showPageLoadError(error.message);
       }
+
+      return false;
     }
   }
 
@@ -182,14 +228,29 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
         return;
       }
 
-      applyPage(page, historyMode);
+      applyPage(page);
+      setPagePath(page.id, historyMode);
+      return true;
     } catch (error) {
       if (requestId === pageRequestRef.current && activeRef.current) {
         requestedPageIdRef.current = "";
         setPageLoading(false);
         setDataError(error.message);
       }
+
+      return false;
     }
+  }
+
+  function cancelPageRequest() {
+    if (!requestedPageIdRef.current) {
+      return;
+    }
+
+    pageRequestRef.current += 1;
+    requestedPageIdRef.current = "";
+    setPageLoading(false);
+    setDataError("");
   }
 
   function drainSaveQueue() {
@@ -283,13 +344,21 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     await createAndOpenPage("push");
   }
 
-  async function openSavedPage(pageId) {
-    if (pageId === currentPageIdRef.current || pageId === requestedPageIdRef.current) {
+  function handlePageLinkClick(event, pageId) {
+    if (pageId !== routePageIdRef.current) {
       return;
     }
 
-    resetTimer();
-    await openPage(pageId, "push");
+    event.preventDefault();
+
+    if (
+      pageId !== currentPageIdRef.current &&
+      pageId !== requestedPageIdRef.current &&
+      pageId !== handledPageIdRef.current
+    ) {
+      resetTimer();
+      void openPage(pageId);
+    }
   }
 
   function toggleTimer() {
@@ -355,10 +424,15 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   }
 
   useEffect(() => {
+    routePageIdRef.current = routePageId;
+  }, [routePageId]);
+
+  useEffect(() => {
     activeRef.current = true;
     let isCurrentInitialization = true;
 
     async function initializeJournal() {
+      setJournalInitialized(false);
       setPageLoading(true);
       setDataError("");
 
@@ -370,38 +444,31 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
         }
 
         setPages(pages);
+        const currentRoutePageId = routePageIdRef.current;
         const savedPageId = window.localStorage.getItem(getPageStorageKey(user.id));
-        const routePage = pages.find((page) => page.id === routePageId);
+        const routePage = pages.find((page) => page.id === currentRoutePageId);
         const savedPage = pages.find((page) => page.id === savedPageId);
 
         if (routePage) {
-          await openPage(routePage.id, "replace");
-          return;
+          await openPage(routePage.id);
+        } else if (currentRoutePageId) {
+          showPageNotFound(currentRoutePageId);
+        } else if (savedPage || pages[0]) {
+          const initialPage = savedPage || pages[0];
+          const opened = await openPage(initialPage.id);
+
+          if (opened && routePageIdRef.current === "") {
+            setPagePath(initialPage.id, "replace");
+          }
+        } else {
+          await createAndOpenPage("replace");
         }
 
-        if (routePageId) {
-          currentPageIdRef.current = "";
-          textRef.current = "";
-          setCurrentPageId("");
-          setText("");
-          setPageLoading(false);
-          setDataError("This page does not exist.");
-          return;
+        if (activeRef.current && isCurrentInitialization) {
+          setJournalInitialized(true);
         }
-
-        if (savedPage) {
-          await openPage(savedPage.id, "replace");
-          return;
-        }
-
-        if (pages[0]) {
-          await openPage(pages[0].id, "replace");
-          return;
-        }
-
-        await createAndOpenPage("replace");
       } catch (error) {
-        if (activeRef.current) {
+        if (activeRef.current && isCurrentInitialization) {
           setPageLoading(false);
           setDataError(error.message);
         }
@@ -413,8 +480,61 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     return () => {
       isCurrentInitialization = false;
       activeRef.current = false;
+      pageRequestRef.current += 1;
     };
-  }, [routePageId, supabase, user.id]);
+  }, [supabase, user.id]);
+
+  useEffect(() => {
+    if (!journalInitialized || !activeRef.current) {
+      return;
+    }
+
+    if (!routePageId) {
+      cancelPageRequest();
+      const savedPageId = window.localStorage.getItem(getPageStorageKey(user.id));
+      const savedPage = pageListRef.current.find((page) => page.id === savedPageId);
+      const nextPageId = currentPageIdRef.current || savedPage?.id || pageListRef.current[0]?.id;
+
+      if (!nextPageId) {
+        return;
+      }
+
+      if (nextPageId === currentPageIdRef.current) {
+        handledPageIdRef.current = nextPageId;
+        setPageLoading(false);
+        setDataError("");
+        setPagePath(nextPageId, "replace");
+        return;
+      }
+
+      resetTimer();
+      void openPage(nextPageId).then((opened) => {
+        if (opened && routePageIdRef.current === "") {
+          setPagePath(nextPageId, "replace");
+        }
+      });
+      return;
+    }
+
+    if (routePageId === requestedPageIdRef.current) {
+      return;
+    }
+
+    if (routePageId === currentPageIdRef.current) {
+      cancelPageRequest();
+      handledPageIdRef.current = routePageId;
+      setPageLoading(false);
+      setDataError("");
+      return;
+    }
+
+    if (routePageId === handledPageIdRef.current) {
+      return;
+    }
+
+    resetTimer();
+    void openPage(routePageId);
+  }, [journalInitialized, routePageId, user.id]);
 
   useEffect(() => {
     if (!markdownPreview && !pageLoading) {
@@ -460,15 +580,17 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
       <aside className="journal-sidebar" aria-label="Saved pages">
         <div className="journal-sidebar-pages">
           {pageList.map((page) => (
-            <button
+            <Link
               className="journal-page-link"
-              data-active={page.id === currentPageId}
+              data-active={page.id === (routePageId || currentPageId)}
+              href={`/page/${encodeURIComponent(page.id)}`}
               key={page.id}
-              type="button"
-              onClick={() => void openSavedPage(page.id)}
+              scroll={false}
+              aria-current={page.id === routePageId ? "page" : undefined}
+              onClick={(event) => handlePageLinkClick(event, page.id)}
             >
               <span className="journal-page-title">{page.title}</span>
-            </button>
+            </Link>
           ))}
         </div>
 
