@@ -143,8 +143,31 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     window.localStorage.setItem(getPageStorageKey(user.id), page.id);
   }
 
+  function clearPageState() {
+    currentPageIdRef.current = "";
+    requestedPageIdRef.current = "";
+    textRef.current = "";
+    setCurrentPageId("");
+    setText("");
+    setMarkdownPreview(false);
+    setPageLoading(false);
+  }
+
+  function showPageNotFound(pageId) {
+    clearPageState();
+    handledPageIdRef.current = pageId;
+    setDataError("This page does not exist.");
+  }
+
+  function showPageLoadError(message) {
+    clearPageState();
+    handledPageIdRef.current = "";
+    setDataError(message);
+  }
+
   async function openPage(pageId) {
     const requestId = pageRequestRef.current + 1;
+    const requestRoutePageId = routePageIdRef.current;
     pageRequestRef.current = requestId;
     requestedPageIdRef.current = pageId;
     setDataError("");
@@ -153,22 +176,28 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     try {
       const page = await getJournalPage(supabase, user.id, pageId);
 
-      if (requestId !== pageRequestRef.current || !activeRef.current) {
+      if (
+        requestId !== pageRequestRef.current ||
+        !activeRef.current ||
+        requestRoutePageId !== routePageIdRef.current
+      ) {
         return false;
       }
 
       if (!page) {
-        throw new Error("This page does not exist.");
+        showPageNotFound(pageId);
+        return false;
       }
 
       applyPage(page);
       return true;
     } catch (error) {
-      if (requestId === pageRequestRef.current && activeRef.current) {
-        handledPageIdRef.current = pageId;
-        requestedPageIdRef.current = "";
-        setPageLoading(false);
-        setDataError(error.message);
+      if (
+        requestId === pageRequestRef.current &&
+        activeRef.current &&
+        requestRoutePageId === routePageIdRef.current
+      ) {
+        showPageLoadError(error.message);
       }
 
       return false;
@@ -307,8 +336,19 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   }
 
   function handlePageLinkClick(event, pageId) {
-    if (pageId === routePageIdRef.current) {
-      event.preventDefault();
+    if (pageId !== routePageIdRef.current) {
+      return;
+    }
+
+    event.preventDefault();
+
+    if (
+      pageId !== currentPageIdRef.current &&
+      pageId !== requestedPageIdRef.current &&
+      pageId !== handledPageIdRef.current
+    ) {
+      resetTimer();
+      void openPage(pageId);
     }
   }
 
@@ -403,14 +443,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
         if (routePage) {
           await openPage(routePage.id);
         } else if (currentRoutePageId) {
-          currentPageIdRef.current = "";
-          handledPageIdRef.current = currentRoutePageId;
-          requestedPageIdRef.current = "";
-          textRef.current = "";
-          setCurrentPageId("");
-          setText("");
-          setPageLoading(false);
-          setDataError("This page does not exist.");
+          showPageNotFound(currentRoutePageId);
         } else if (savedPage || pages[0]) {
           const initialPage = savedPage || pages[0];
           const opened = await openPage(initialPage.id);
