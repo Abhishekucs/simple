@@ -30,9 +30,11 @@ body {
 }
 
 .journal-shell {
-  width: 100vw;
-  height: 100vh;
-  height: 100svh;
+  position: fixed;
+  top: var(--vv-offset-top, 0px);
+  left: 0;
+  width: 100%;
+  height: var(--vv-height, 100svh);
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
   background: var(--paper);
@@ -204,7 +206,7 @@ body {
 }
 
 .journal-sidebar-toggle {
-  position: fixed;
+  position: absolute;
   top: 14px;
   left: 14px;
   z-index: 5;
@@ -240,8 +242,7 @@ body {
   grid-column: 1;
   display: flex;
   min-width: 0;
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
   flex-direction: column;
   overflow: hidden;
   border-right: 1px solid var(--rule);
@@ -376,8 +377,7 @@ body {
 .journal-workspace {
   grid-column: 2;
   min-width: 0;
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
 }
 
 .journal-workspace[data-loading="true"] {
@@ -387,8 +387,7 @@ body {
 .journal-editor {
   display: block;
   width: min(720px, calc(100% - 48px));
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
   margin: 0 auto;
   padding: clamp(112px, 17vh, 176px) 0 112px;
   border: 0;
@@ -426,8 +425,7 @@ body {
 .journal-markdown {
   display: block;
   width: min(720px, calc(100% - 48px));
-  height: 100vh;
-  height: 100svh;
+  height: 100%;
   margin: 0 auto;
   padding: clamp(112px, 17vh, 176px) 0 112px;
   overflow-y: auto;
@@ -593,7 +591,7 @@ body {
 }
 
 .journal-data-error {
-  position: fixed;
+  position: absolute;
   top: 20px;
   right: clamp(18px, 3vw, 34px);
   z-index: 3;
@@ -606,7 +604,7 @@ body {
 }
 
 .journal-bottom {
-  position: fixed;
+  position: absolute;
   left: calc(var(--sidebar-width) + clamp(18px, 3vw, 34px));
   right: clamp(18px, 3vw, 34px);
   bottom: clamp(16px, 3vh, 28px);
@@ -704,7 +702,7 @@ body {
 
   .journal-sidebar-scrim {
     display: block;
-    position: fixed;
+    position: absolute;
     inset: 0;
     z-index: 4;
     appearance: none;
@@ -720,7 +718,7 @@ body {
   }
 
   .journal-sidebar {
-    position: fixed;
+    position: absolute;
     top: 0;
     left: 0;
     z-index: 5;

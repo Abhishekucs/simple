@@ -102,6 +102,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   const router = useRouter();
   const routePageId = typeof params.id === "string" ? params.id : "";
   const editorRef = useRef(null);
+  const shellRef = useRef(null);
   const timerEndsAtRef = useRef(null);
   const activeRef = useRef(true);
   const currentPageIdRef = useRef("");
@@ -579,6 +580,34 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   }, [currentPageId, markdownPreview, pageLoading]);
 
   useEffect(() => {
+    const shell = shellRef.current;
+
+    if (!shell) {
+      return undefined;
+    }
+
+    const syncVisualViewport = () => {
+      const viewport = window.visualViewport;
+      const height = viewport?.height ?? window.innerHeight;
+      const offsetTop = viewport?.offsetTop ?? 0;
+
+      shell.style.setProperty("--vv-height", `${height}px`);
+      shell.style.setProperty("--vv-offset-top", `${offsetTop}px`);
+    };
+
+    syncVisualViewport();
+    window.addEventListener("resize", syncVisualViewport);
+    window.visualViewport?.addEventListener("resize", syncVisualViewport);
+    window.visualViewport?.addEventListener("scroll", syncVisualViewport);
+
+    return () => {
+      window.removeEventListener("resize", syncVisualViewport);
+      window.visualViewport?.removeEventListener("resize", syncVisualViewport);
+      window.visualViewport?.removeEventListener("scroll", syncVisualViewport);
+    };
+  }, []);
+
+  useEffect(() => {
     if (!timerRunning) {
       return undefined;
     }
@@ -606,6 +635,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
 
   return (
     <main
+      ref={shellRef}
       className={`journal-shell${theme === "dark" ? " is-dark" : ""}`}
       data-sidebar={sidebarOpen ? "open" : "closed"}
       aria-label="Journal page"
