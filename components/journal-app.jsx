@@ -47,12 +47,6 @@ function isJournalPageId(value) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 }
 
-function hasMarkdownSyntax(value) {
-  return /(^|\n)\s{0,3}(#{1,6}\s|[-*+]\s|\d+\.\s|>\s|```|~~~|\|.+\||[-*_]{3,}\s*$)|(\*\*|__|~~|`|\[[^\]]+\]\([^)]+\))/m.test(
-    value
-  );
-}
-
 function formatDuration(totalSeconds) {
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -141,7 +135,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
     textRef.current = page.content_md;
     setCurrentPageId(page.id);
     setText(page.content_md);
-    setMarkdownPreview(hasMarkdownSyntax(page.content_md));
+    setMarkdownPreview(false);
     setPageLoading(false);
     updatePageMetadata(page);
     window.localStorage.setItem(getPageStorageKey(user.id), page.id);
@@ -652,11 +646,6 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
             autoComplete="off"
             placeholder="Just start"
             aria-label="Journal entry"
-            onBlur={() => {
-              if (hasMarkdownSyntax(textRef.current)) {
-                setMarkdownPreview(true);
-              }
-            }}
             onChange={handleTextChange}
             onKeyDown={handleKeyDown}
           />
