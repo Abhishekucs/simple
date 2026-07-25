@@ -14,6 +14,7 @@ import {
 } from "../lib/journal-pages";
 
 const CURRENT_PAGE_KEY = "simple-journal-current-page";
+const SIDEBAR_KEY = "journal-sidebar-open";
 const TIMER_SECONDS = 15 * 60;
 const FONT_SIZES = [16, 18, 20, 22];
 const FONT_OPTIONS = [
@@ -69,6 +70,33 @@ function getPageListItem(page) {
   };
 }
 
+function getInitialSidebarOpen() {
+  if (typeof window === "undefined") {
+    return true;
+  }
+
+  const savedSidebar = window.localStorage.getItem(SIDEBAR_KEY);
+
+  if (savedSidebar === "true") {
+    return true;
+  }
+
+  if (savedSidebar === "false") {
+    return false;
+  }
+
+  return !window.matchMedia("(max-width: 640px)").matches;
+}
+
+function SidebarToggleIcon() {
+  return (
+    <svg aria-hidden="true" fill="none" height="16" viewBox="0 0 16 16" width="16">
+      <rect height="12" rx="1.5" stroke="currentColor" strokeWidth="1.25" width="12" x="2" y="2" />
+      <path d="M6 2.5v11" stroke="currentColor" strokeWidth="1.25" />
+    </svg>
+  );
+}
+
 export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   const params = useParams();
   const router = useRouter();
@@ -94,9 +122,23 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   const [pageList, setPageList] = useState([]);
   const [pageLoading, setPageLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState("saved");
+  const [sidebarOpen, setSidebarOpen] = useState(getInitialSidebarOpen);
   const [text, setText] = useState("");
   const [timerRunning, setTimerRunning] = useState(false);
   const [timerSeconds, setTimerSeconds] = useState(TIMER_SECONDS);
+
+  function toggleSidebar() {
+    setSidebarOpen((isOpen) => {
+      const nextOpen = !isOpen;
+      window.localStorage.setItem(SIDEBAR_KEY, String(nextOpen));
+      return nextOpen;
+    });
+  }
+
+  function closeSidebar() {
+    setSidebarOpen(false);
+    window.localStorage.setItem(SIDEBAR_KEY, "false");
+  }
 
   function setPages(nextPages) {
     const sortedPages = sortPages(nextPages);
@@ -565,13 +607,39 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
   return (
     <main
       className={`journal-shell${theme === "dark" ? " is-dark" : ""}`}
+      data-sidebar={sidebarOpen ? "open" : "closed"}
       aria-label="Journal page"
       style={{
         "--journal-font-size": `${fontSize}px`,
         "--journal-font-family": currentFontFamily
       }}
     >
-      <aside className="journal-sidebar" aria-label="Saved pages">
+      <button
+        className="journal-sidebar-toggle"
+        type="button"
+        aria-controls="journal-sidebar"
+        aria-expanded={sidebarOpen}
+        aria-label={sidebarOpen ? "Close sidebar" : "Open sidebar"}
+        onClick={toggleSidebar}
+      >
+        <SidebarToggleIcon />
+      </button>
+
+      {sidebarOpen ? (
+        <button
+          className="journal-sidebar-scrim"
+          type="button"
+          aria-label="Close sidebar"
+          onClick={closeSidebar}
+        />
+      ) : null}
+
+      <aside
+        className="journal-sidebar"
+        id="journal-sidebar"
+        aria-hidden={!sidebarOpen}
+        aria-label="Saved pages"
+      >
         <div className="journal-sidebar-pages">
           {pageList.map((page) => (
             <Link
