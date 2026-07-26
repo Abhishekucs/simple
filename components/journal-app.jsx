@@ -726,7 +726,7 @@ export default function JournalApp({ onToggleTheme, supabase, theme, user }) {
                   input({ node, ...props }) {
                     return <input {...props} readOnly />;
                   },
-                  table({ children, ...props }) {
+                  table({ node, children, ...props }) {
                     return (
                       <div className="journal-markdown-table-wrap">
                         <table {...props}>{children}</table>
