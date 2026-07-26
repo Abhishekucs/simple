@@ -552,7 +552,9 @@ body {
 }
 
 .journal-markdown pre {
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
   padding: 0.85em 1em;
   background: var(--code-surface);
   line-height: 1.55;
