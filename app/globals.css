@@ -37,6 +37,7 @@ body {
   height: var(--vv-height, 100svh);
   display: grid;
   grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
+  overflow: hidden;
   background: var(--paper);
   --sidebar-width: 224px;
   --code-surface: #f6f6f6;
@@ -377,7 +378,9 @@ body {
 .journal-workspace {
   grid-column: 2;
   min-width: 0;
+  min-height: 0;
   height: 100%;
+  overflow: hidden;
 }
 
 .journal-workspace[data-loading="true"] {
@@ -387,6 +390,9 @@ body {
 .journal-editor {
   display: block;
   width: min(720px, calc(100% - 48px));
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
   margin: 0 auto;
   padding: clamp(112px, 17vh, 176px) 0 112px;
@@ -425,11 +431,17 @@ body {
 .journal-markdown {
   display: block;
   width: min(720px, calc(100% - 48px));
+  max-width: 100%;
+  min-width: 0;
+  min-height: 0;
   height: 100%;
   margin: 0 auto;
   padding: clamp(112px, 17vh, 176px) 0 112px;
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
+  overflow-wrap: break-word;
+  word-break: break-word;
   color: var(--content-ink);
   font-family: var(--journal-font-family);
   font-size: var(--journal-font-size);
@@ -485,7 +497,7 @@ body {
 .journal-markdown ul,
 .journal-markdown ol,
 .journal-markdown pre,
-.journal-markdown table {
+.journal-markdown .journal-markdown-table-wrap {
   margin: 0 0 1em;
 }
 
@@ -496,6 +508,14 @@ body {
 
 .journal-markdown li + li {
   margin-top: 0.2em;
+}
+
+.journal-markdown li > p {
+  margin: 0;
+}
+
+.journal-markdown li > p + p {
+  margin-top: 0.55em;
 }
 
 .journal-markdown li:has(input[type="checkbox"]) {
@@ -558,10 +578,14 @@ body {
   background: var(--rule);
 }
 
-.journal-markdown table {
-  display: block;
-  width: 100%;
+.journal-markdown-table-wrap {
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+}
+
+.journal-markdown table {
+  width: 100%;
   border-collapse: collapse;
   font-size: 0.94em;
 }
